@@ -207,6 +207,7 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 	}
 	
 	public static function header(){
+		echo '<script src=https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js></script>';
 		$jsUrl = Helper::options()->pluginUrl."/TleBarrager/resource/js/jquery.barrager.js";
 		echo '<script src="'.$jsUrl.'"></script>';
 		$cssUrl = Helper::options()->pluginUrl . '/TleBarrager/resource/css/barrager.css';
