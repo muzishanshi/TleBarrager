@@ -74,7 +74,7 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 		$arr_put = array();
 		foreach($result as $row){
 			$gravatar = self::gravatar($row["mail"]);
-			$content = $row["text"];
+			$content = mb_strimwidth($row["text"],0, 58,'...');
 			$content = htmlspecialchars($content);
 			$content = self::commentEmoji($content);
 			$a = array(
@@ -89,7 +89,7 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 		}
 		if(!empty($barrager)){
 			echo '<script>
-				var data = '.$barrager.'
+				var data = '.$barrager.';
 				var items=data;
 				/*弹幕总数*/
 				var total=data.length;
@@ -143,7 +143,7 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 					}else{
 						barrager_start();
 					}
-				})
+				});
 				</script>
 			';
 		}
