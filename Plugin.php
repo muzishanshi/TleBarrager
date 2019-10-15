@@ -1,17 +1,18 @@
 <?php
 /**
- * 为Typecho增加评论弹幕功能
+ * 为Typecho增加评论弹幕功能<div class="barragerSet"><br /><a href="javascript:;" title="插件因兴趣于闲暇时间所写，故会有代码不规范、不专业和bug的情况，但完美主义促使代码还说得过去，如有bug或使用问题进行反馈即可。">鼠标轻触查看备注</a>&nbsp;<a href="http://club.tongleer.com" target="_blank">论坛</a>&nbsp;<a href="https://www.tongleer.com/api/web/pay.png" target="_blank">打赏</a>&nbsp;<a href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=diamond0422@qq.com" target="_blank">反馈</a></div><style>.barragerSet a{background: #4DABFF;padding: 5px;color: #fff;}</style>
  * @package TleBarragerForTypecho弹幕插件
  * @author 二呆
- * @version 1.0.1
+ * @version 1.0.2<br /><span id="barragerUpdateInfo"></span><script>barragerXmlHttp=new XMLHttpRequest();barragerXmlHttp.open("GET","https://www.tongleer.com/api/interface/TleBarrager.php?action=update&version=2",true);barragerXmlHttp.send(null);barragerXmlHttp.onreadystatechange=function () {if (barragerXmlHttp.readyState ==4 && barragerXmlHttp.status ==200){document.getElementById("barragerUpdateInfo").innerHTML=barragerXmlHttp.responseText;}}</script>
  * @link http://www.tongleer.com/
- * @date 2019-04-22
+ * @date 2019-10-16
  */
-define('TLEBARRAGER_VERSION', '1');
+define('TLEBARRAGER_VERSION', '2');
 class TleBarrager_Plugin implements Typecho_Plugin_Interface{
     // 激活插件
     public static function activate(){
 		Typecho_Plugin::factory('Widget_Archive')->header = array('TleBarrager_Plugin', 'header');
+		Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('TleBarrager_Plugin', 'contentEx');
         return _t('插件已经激活');
     }
 
@@ -25,26 +26,11 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 		$options = Typecho_Widget::widget('Widget_Options');
 		$plug_url = $options->pluginUrl;
 		
-		$div=new Typecho_Widget_Helper_Layout();
-		$div->html('
-			<small>
-			版本检查：<span id="versionCode"></span>
-			<p>
-				<script src="https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-				<script>
-					$.post("'.$plug_url.'/TleBarrager/ajax/update.php",{version:'.TLEBARRAGER_VERSION.'},function(data){
-						$("#versionCode").html(data);
-					});
-				</script>
-				<h2>添加代码</h2>
-				<span>
-					将以下代码放到主题目录下post.php中任意位置，如果网站启用了pjax，一定要放在pjax容器之内。
-					<pre>&lt;?php TleBarrager_Plugin::show($this);?></pre>
-				</span>
-			</p>
-			</small>
-		');
-		$div->render();
+		$isEnableJQuery = new Typecho_Widget_Helper_Form_Element_Radio('isEnableJQuery', array(
+            'y'=>_t('是'),
+            'n'=>_t('否')
+        ), 'y', _t('是否加载JQuery'), _t("用于解决jquery冲突问题，如果主题head中自带jquery，需要选择否；如果主题中未加载jquery，则需要选择是。"));
+		$form->addInput($isEnableJQuery->addRule('enum', _t(''), array('y', 'n')));
 		
 		$ArticleId = new Typecho_Widget_Helper_Form_Element_Text('ArticleId', NULL, NULL, _t('指定文章ID'), _t('指定文章ID可指定弹幕显示的ID，多个请用英文逗号隔开，默认为空或0即为全部。'));
         $form->addInput($ArticleId);
@@ -59,8 +45,8 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
         return Typecho_Widget::widget('Widget_Options')->plugin('TleBarrager');
     }
 	
-	public static function show($obj){
-		$cid = $obj->cid;
+	public static function contentEx($html, $widget, $lastResult){
+		$cid = $widget->cid;
 		$option=self::getConfig();
 		$ArticleIds=$option->ArticleId;
 		$ArticleIdArr = explode(',', $ArticleIds);
@@ -88,7 +74,7 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 			$barrager = json_encode($arr_put);
 		}
 		if(!empty($barrager)){
-			echo '<script>
+			echo $html.'<script>
 				var data = '.$barrager.';
 				var items=data;
 				/*弹幕总数*/
@@ -147,6 +133,7 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 				</script>
 			';
 		}
+		return $html;
 	}
 	
 	public static function gravatar($email, $s = 40, $d = 'mm', $g = 'g') {
@@ -207,7 +194,10 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 	}
 	
 	public static function header(){
-		echo '<script src=https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js></script>';
+		$option=self::getConfig();
+		if($option->isEnableJQuery=="y"){
+			echo '<script src=https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js></script>';
+		}
 		$jsUrl = Helper::options()->pluginUrl."/TleBarrager/resource/js/jquery.barrager.js";
 		echo '<script src="'.$jsUrl.'"></script>';
 		$cssUrl = Helper::options()->pluginUrl . '/TleBarrager/resource/css/barrager.css';
