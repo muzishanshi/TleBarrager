@@ -3,16 +3,15 @@
  * 为Typecho增加评论弹幕功能<div class="barragerSet"><br /><a href="javascript:;" title="插件因兴趣于闲暇时间所写，故会有代码不规范、不专业和bug的情况，但完美主义促使代码还说得过去，如有bug或使用问题进行反馈即可。">鼠标轻触查看备注</a>&nbsp;<a href="http://club.tongleer.com" target="_blank">论坛</a>&nbsp;<a href="https://www.tongleer.com/api/web/pay.png" target="_blank">打赏</a>&nbsp;<a href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=diamond0422@qq.com" target="_blank">反馈</a></div><style>.barragerSet a{background: #4DABFF;padding: 5px;color: #fff;}</style>
  * @package TleBarragerForTypecho弹幕插件
  * @author 二呆
- * @version 1.0.2<br /><span id="barragerUpdateInfo"></span><script>barragerXmlHttp=new XMLHttpRequest();barragerXmlHttp.open("GET","https://www.tongleer.com/api/interface/TleBarrager.php?action=update&version=2",true);barragerXmlHttp.send(null);barragerXmlHttp.onreadystatechange=function () {if (barragerXmlHttp.readyState ==4 && barragerXmlHttp.status ==200){document.getElementById("barragerUpdateInfo").innerHTML=barragerXmlHttp.responseText;}}</script>
+ * @version 1.0.3<br /><span id="barragerUpdateInfo"></span><script>barragerXmlHttp=new XMLHttpRequest();barragerXmlHttp.open("GET","https://www.tongleer.com/api/interface/TleBarrager.php?action=update&version=3",true);barragerXmlHttp.send(null);barragerXmlHttp.onreadystatechange=function () {if (barragerXmlHttp.readyState ==4 && barragerXmlHttp.status ==200){document.getElementById("barragerUpdateInfo").innerHTML=barragerXmlHttp.responseText;}}</script>
  * @link http://www.tongleer.com/
- * @date 2019-10-16
+ * @date 2019-10-17
  */
-define('TLEBARRAGER_VERSION', '2');
+define('TLEBARRAGER_VERSION', '3');
 class TleBarrager_Plugin implements Typecho_Plugin_Interface{
     // 激活插件
     public static function activate(){
 		Typecho_Plugin::factory('Widget_Archive')->header = array('TleBarrager_Plugin', 'header');
-		Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('TleBarrager_Plugin', 'contentEx');
         return _t('插件已经激活');
     }
 
@@ -25,6 +24,19 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
     public static function config(Typecho_Widget_Helper_Form $form){
 		$options = Typecho_Widget::widget('Widget_Options');
 		$plug_url = $options->pluginUrl;
+		
+		$div = new Typecho_Widget_Helper_Layout();
+		$html='
+			<b>使用方法：</b><br />
+			<small>
+			1、根据需求决定是否填写指定文章ID；<br />
+			2、为防止jquery冲突，如果主题中加载了jquery，以下需要选择“否”；<br />
+			3、需要手动到主题目录的post.php中，添加以下代码即可。<font color="blue">（如果网站开启了pjax，需要在pjax容器内添加以下代码，可搜索$(document).pjax其中的第二个参数即为pjax容器的css选择器类名，再在添加以下代码时注意添加位置即可。）</font><br />
+			<font color="red">&lt;?php TleBarrager_Plugin::show($this);?></font>
+			</small>
+		';
+		$div->html($html);
+		$div->render();
 		
 		$isEnableJQuery = new Typecho_Widget_Helper_Form_Element_Radio('isEnableJQuery', array(
             'y'=>_t('是'),
@@ -45,7 +57,7 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
         return Typecho_Widget::widget('Widget_Options')->plugin('TleBarrager');
     }
 	
-	public static function contentEx($html, $widget, $lastResult){
+	public static function show($widget){
 		$cid = $widget->cid;
 		$option=self::getConfig();
 		$ArticleIds=$option->ArticleId;
@@ -73,8 +85,8 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 		if(!empty($arr_put)){
 			$barrager = json_encode($arr_put);
 		}
-		if(!empty($barrager)){
-			echo $html.'<script>
+		if(!empty($barrager)&&strpos($_SERVER["QUERY_STRING"],"WeiboFile")===false){
+			echo '<script>
 				var data = '.$barrager.';
 				var items=data;
 				/*弹幕总数*/
@@ -133,12 +145,11 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 				</script>
 			';
 		}
-		return $html;
 	}
 	
 	public static function gravatar($email, $s = 40, $d = 'mm', $g = 'g') {
 		$ssud=explode("@",$email,2);
-		if($ssud[1]=='qq.com'){
+		if(@$ssud[1]=='qq.com'){
 			return "http://q.qlogo.cn/headimg_dl?bs=qq&dst_uin={$ssud[0]}&src_uin=qq.feixue.me&fid=blog&spec=100";
 		}else{
 			$hash = md5($email);

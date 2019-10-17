@@ -20,6 +20,10 @@
 Github：https://github.com/muzishanshi/TleBarrager
 
 #### 更新记录：
+2019-10-17 V1.0.3
+
+	修复上次更新因马虎和便捷操作产生的bug。
+	
 2019-10-16 V1.0.2
 
 	1、增加了jquery载入控制；
