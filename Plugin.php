@@ -115,7 +115,7 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 				  index++;
 				  /*所有弹幕发布完毕，清除计时器。*/
 				  if(clear){clearInterval(looper);return false;}
-				  if(index == total){
+				  if(index > total){
 					  index = 0;
 					  barrager_close();
 				  }
