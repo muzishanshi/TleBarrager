@@ -117,6 +117,7 @@ class TleBarrager_Plugin implements Typecho_Plugin_Interface{
 				  if(clear){clearInterval(looper);return false;}
 				  if(index == total){
 					  index = 0;
+					  barrager_close();
 				  }
 				}
 				function barrager_close(){
